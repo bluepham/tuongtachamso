@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { QuestionGame1, QuestionGame2, QuestionGame3, QuestionGame4 } from '../types';
 
@@ -9,6 +8,24 @@ if (!process.env.API_KEY) {
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const model = 'gemini-2.5-flash';
+
+const parseJsonResponse = <T>(jsonText: string): T => {
+  let cleanedJson = jsonText.trim();
+  
+  // Handle markdown code blocks (e.g., ```json ... ```)
+  const jsonMatch = cleanedJson.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (jsonMatch && jsonMatch[1]) {
+    cleanedJson = jsonMatch[1];
+  }
+
+  try {
+    return JSON.parse(cleanedJson) as T;
+  } catch (error) {
+    console.error("Failed to parse JSON:", cleanedJson);
+    console.error("Original text from AI:", jsonText);
+    throw new Error("AI returned invalid JSON format.");
+  }
+};
 
 export const generateGame1Question = async (): Promise<QuestionGame1> => {
   const response = await ai.models.generateContent({
@@ -31,8 +48,8 @@ export const generateGame1Question = async (): Promise<QuestionGame1> => {
       },
     },
   });
-  const jsonText = response.text.trim();
-  return JSON.parse(jsonText) as QuestionGame1;
+  const jsonText = response.text;
+  return parseJsonResponse<QuestionGame1>(jsonText);
 };
 
 export const generateGame2Question = async (): Promise<QuestionGame2> => {
@@ -62,8 +79,8 @@ export const generateGame2Question = async (): Promise<QuestionGame2> => {
         },
       },
     });
-    const jsonText = response.text.trim();
-    return JSON.parse(jsonText) as QuestionGame2;
+    const jsonText = response.text;
+    return parseJsonResponse<QuestionGame2>(jsonText);
   };
   
   export const generateGame3Question = async (): Promise<QuestionGame3> => {
@@ -92,8 +109,8 @@ export const generateGame2Question = async (): Promise<QuestionGame2> => {
         },
       },
     });
-    const jsonText = response.text.trim();
-    return JSON.parse(jsonText) as QuestionGame3;
+    const jsonText = response.text;
+    return parseJsonResponse<QuestionGame3>(jsonText);
   };
   
   export const generateGame4Questions = async (): Promise<QuestionGame4[]> => {
@@ -118,8 +135,8 @@ export const generateGame2Question = async (): Promise<QuestionGame2> => {
         },
       },
     });
-    const jsonText = response.text.trim();
-    return JSON.parse(jsonText) as QuestionGame4[];
+    const jsonText = response.text;
+    return parseJsonResponse<QuestionGame4[]>(jsonText);
   };
 
 export const getHint = async (question: string): Promise<string> => {
